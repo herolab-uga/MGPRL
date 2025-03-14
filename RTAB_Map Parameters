@@ -1,0 +1,51 @@
+
+    frame_id: "base_footprint"
+    publish_tf: true
+    rtabmapviz: true
+    queue_size: 30
+    qos: 2
+
+    approx_sync: true
+    subscribe_scan: true
+    subscribe_depth: false
+    subscribe_rgbd: true
+    rgbd_cameras: 2
+
+    #Ground Truth
+    ground_truth_frame_id: "world"
+    ground_truth_base_frame_id: "base_footprint_gt"
+
+    #Hypotheses selection
+    Rtabmap/LoopThr: "0.2" #Loop closing threshold
+
+    #RGB-D Slam
+    RGBD/OptimizeFromGraphEnd: "false" #Set to false to generate map correction between /map and /odom
+    RGBD/ProximityPathMaxNeighbors: "5" #Maximum neighbor nodes compared on each path for one-to-many proximity detection. Set to 0 to disable one-to-many proximity detection (by merging the laser scans)
+    RGBD/NeighborLinkRefining: "true" #When a new node is added to the graph, the transformation of its neighbor link to the previous node is refined using registration approach selected
+
+    #Graph optimization
+    Optimizer/Strategy: "1" #Graph optimization strategy: 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
+    Optimizer/Iterations: "20" #Optimization iterations
+    Optimizer/Epsilon: "0.0" #Stop optimizing when the error improvement is less than this value
+
+    #Common registration parameters
+    Reg/Strategy: "2" #Loop closure transformation: 0=Visual, 1=ICP, 2=Visual+ICP
+    Reg/Force3DoF: "true" #Force 3 degrees-of-freedom transform (3Dof: x,y and yaw). Parameters z, roll and pitch will be set to 0
+
+    #Visual registration parameters
+    Vis/EstimationType: "0" #Should be 0 for multi-cameras. Motion estimation approach: 0:3D->3D, 1:3D->2D (PnP), 2:2D->2D (Epipolar Geometry)
+    Vis/MinInliers: "10" #Minimum feature correspondences to compute/accept the transformation
+
+    #ICP registration parameters
+    Icp/Strategy: "1" #ICP implementation: 0=Point Cloud Library, 1=libpointmatcher, 2=CCCoreLib (CloudCompare)
+    Icp/MaxTranslation: "0.3" #Maximum ICP translation correction accepted (m)
+    Icp/MaxCorrespondenceDistance: "0.1" #Max distance for point correspondences
+    Icp/PointToPlane: "true" #Use point to plane ICP
+
+    #Occupancy Grid
+    Grid/Sensor: "2" #Create occupancy grid from selected sensor: 0=laser scan, 1=depth image(s) or 2=both laser scan and depth image(s)
+    Grid/RangeMax: "0" #Maximum range from sensor. 0=inf
+    Grid/CellSize: "0.05" #Resolution of the occupancy grid
+    Grid/3D: "true" #A 3D occupancy grid is required if you want an OctoMap (3D ray tracing). Set to false if you want only a 2D map, the cloud will be projected on xy plane. A 2D map can be still generated if checked, but it requires more memory and time to generate it. Ignored if laser scan is 2D and Grid/Sensor is 0.
+    Grid/RayTracing: "true" #Ray tracing is done for each occupied cell, filling unknown space between the sensor and occupied cells. If true, RTAB-Map should be built with OctoMap support, otherwise 3D ray tracing is ignored.
+    Grid/MaxObstacleHeight: "2.0" #Maximum obstacles height (0=disabled)
