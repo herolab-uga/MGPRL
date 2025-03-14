@@ -6,7 +6,7 @@ This repository contains the ROS package that implements the works from the algo
 
 
 ### Experimental Demonstration and Video
-
+![](Images/MGPRL.mp4)
 
 ## Requirements & Environment Setup
 The package has been tested on ROS Noetic for both simulated and hardware Turtlebot3 robot (waffle) & Turtlebot2 (2e and 2i). The following requirements are needed before installing the package:
