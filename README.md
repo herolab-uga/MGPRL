@@ -7,7 +7,6 @@ This repository contains the ROS package that implements the works from the algo
 
 ### Experimental Demonstration and Video
 
-### Experimental Demonstration and Video
 
 ## Requirements & Environment Setup
 
