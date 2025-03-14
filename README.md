@@ -108,10 +108,9 @@ The package has been tested on ROS Noetic for both simulated and hardware Turtle
 
 ## Launch
 Run one of the example launch (includes rviz) files included in this ROS package. For instance, 
-
-    ```bash
+```bash
     roslaunch <package_name> house.launch/ bookstore.launch
-    ```
+```
 ## Contributions
 
 - **Sai Krishna Ghanta** - PhD Candidate
