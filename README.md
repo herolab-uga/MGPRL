@@ -6,9 +6,7 @@ This repository contains the ROS package that implements the works from the algo
 
 
 ### Experimental Demonstration and Video
-<video width="600" controls>
-  <source src="Images/MGPRL.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/4e24ec7f-a444-4c3b-a3e0-17c09267e1a9
 
 ## Requirements & Environment Setup
 The package has been tested on ROS Noetic for both simulated and hardware Turtlebot3 robot (waffle) & Turtlebot2 (2e and 2i). The following requirements are needed before installing the package:
@@ -44,6 +42,9 @@ The package has been tested on ROS Noetic for both simulated and hardware Turtle
     sudo apt-get install ros-noetic-turtlebot3*
     ```
     
+
+
+
 8. **AWS Gazebo Worlds Installation**:
     ```bash
     cd ~/catkin_ws/src/
