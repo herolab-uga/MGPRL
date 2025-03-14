@@ -2,7 +2,7 @@
 
 This repository contains the ROS package that implements the works from the algorithm "MGPRL: Distributed Multi-Gaussian Processes for Wi-Fi-based Multi-Robot Relative Localization in Large Indoor Environments". The following figure shows the conceptual overview of MGPRL:
 
-![](Images/Overiew.png)
+![](Images/overiew.png)
 
 
 ### Experimental Demonstration and Video
