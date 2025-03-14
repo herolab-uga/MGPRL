@@ -1,0 +1,380 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Launch Gazebo -->
+  <arg name="model" default="waffle" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="assign_rate" default="4"/>
+  <arg name="from_sensor" default="1"/>
+
+  <arg name="first_tb3"  default="tb3_0"/>
+  <arg name="second_tb3" default="tb3_1"/>
+  <arg name="third_tb3"  default="tb3_2"/>
+  <arg name="robot_name_list" default=" $(arg first_tb3),$(arg second_tb3),$(arg third_tb3)"/>
+  
+  <arg name="first_tb3_x_pos" default=" 0.5"/>
+  <arg name="first_tb3_y_pos" default=" 1.7"/>
+  <arg name="first_tb3_z_pos" default=" 0.0"/>
+  <arg name="first_tb3_yaw"   default=" 0.0"/>
+
+  <arg name="second_tb3_x_pos" default=" 0.5"/>
+  <arg name="second_tb3_y_pos" default=" 2.5"/>
+  <arg name="second_tb3_z_pos" default=" 0.0"/>
+  <arg name="second_tb3_yaw"   default=" 0.0"/>
+
+  <arg name="third_tb3_x_pos" default=" 0.5"/>
+  <arg name="third_tb3_y_pos" default=" 3.3"/>
+  <arg name="third_tb3_z_pos" default=" 0.0"/>
+  <arg name="third_tb3_yaw"   default=" 1.57"/>
+  
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find aws_robomaker_bookstore_world)/worlds/bookstore.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+    <arg name="verbose" value="false"/>
+  </include>
+   
+  <group ns = "$(arg first_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="$(arg first_tb3)" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="20.0" />
+    </node>
+    <node name="spawn_urdf_0" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg first_tb3) -x $(arg first_tb3_x_pos) -y $(arg first_tb3_y_pos) -z $(arg first_tb3_z_pos) -Y $(arg first_tb3_yaw) -param robot_description" />
+  </group>
+
+  <group ns = "$(arg second_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="$(arg second_tb3)" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="20.0" />
+    </node>
+    <node name="spawn_urdf_1" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg second_tb3) -x $(arg second_tb3_x_pos) -y $(arg second_tb3_y_pos) -z $(arg second_tb3_z_pos) -Y $(arg second_tb3_yaw) -param robot_description" />
+  </group>
+
+  <group ns = "$(arg third_tb3)">
+    <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
+    <param name="tf_prefix" value="$(arg third_tb3)" />
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+      <param name="publish_frequency" type="double" value="20.0" />
+    </node>
+    <node name="spawn_urdf_1" pkg="gazebo_ros" type="spawn_model" args="-urdf -model $(arg third_tb3) -x $(arg third_tb3_x_pos) -y $(arg third_tb3_y_pos) -z $(arg third_tb3_z_pos) -Y $(arg third_tb3_yaw) -param robot_description" />
+  </group>
+
+
+  <arg name="robot_namelist" default="($(arg first_tb3))"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="rtabmap_viz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <arg name="with_camera" default="true"/>
+  <arg name="localization" default="false"/>
+  <arg name="database_path" default="~/.ros/rtabmap"/>
+  <arg     if="$(arg localization)" name="rtabmap_args" default=""/>
+  <arg unless="$(arg localization)" name="rtabmap_args" default="-d"/>
+
+<group ns="rtabmap_0">
+    <node if="$(eval model=='waffle')" pkg="rtabmap_sync" type="rgbd_sync" name="rgbd_sync" output="screen">
+      <remap from="rgb/image"         to="/tb3_0/camera/rgb/image_raw"/>
+      <remap from="depth/image"       to="/tb3_0/camera/depth/image_raw"/>
+      <remap from="rgb/camera_info"   to="/tb3_0/camera/rgb/camera_info"/>
+      <param name="approx_sync"         type="bool"   value="false"/>
+      <param name="queue_size"      type="int"    value="30"/>
+    </node>
+
+    <node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" output="screen" args="$(arg rtabmap_args)">
+      <param name="database_path"       type="string" value="$(arg database_path)_0.db"/>
+      <param name="frame_id"            type="string" value="/tb3_0/base_footprint"/>
+      <param name="subscribe_depth" type="bool" value="false"/>
+      <param name="subscribe_rgb" type="bool" value="false"/>
+      <param name="subscribe_rgbd" type="bool" value="true"/>
+      <param name="subscribe_scan"      type="bool"   value="false"/>
+      <param name="Grid/Sensor"            type="string" value="$(arg from_sensor)"/>
+      <param name="queue_size"      type="int"    value="30"/>
+
+      <remap from="odom"            to="/tb3_0/odom"/>
+      <remap from="rgbd_image"       to="rgbd_image"/>     
+      <remap from="scan"            to="/tb3_0/scan"/>
+      <remap from="grid_map" to="/tb3_0/map"/>
+
+
+      <param name="RGBD/AngularUpdate"        type="string" value="0.001"/>
+      <param name="RGBD/LinearUpdate"         type="string" value="0.001"/>
+      <param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/>
+      <param name="Icp/VoxelSize"                 type="string" value="0.01"/> 
+      <param name="Grid/RangeMax" type="string" value="5" />
+      <param name="Grid/CellSize" type="string" value="0.05"/>
+      <param name="Reg/Strategy"                 type="string" value="1"/>
+      <param name="Reg/Force3DoF"                type="string" value="true"/>
+      <param name="Rtabmap/DetectionRate"        type="string" value="2"/>
+      <param name="Grid/RayTracing"              type="string" value="true"/>
+      <param name="Grid/CellSize"                type="string" value="0.05"/>
+      <param name="Grid/3D"                      type="string" value="true"/>
+      <param name="GridGlobal/MinSize"           type="string" value="20"/>
+      <param name="Grid/MaxGroundHeight"         type="string" value="0.15"/>    
+      <param name="Kp/MaxFeatures"               type="string" value="-1"/>    
+      <param name="Kp/MaxDepth"                   type="string" value="2"/>
+
+
+      <!-- localization mode -->
+      <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
+      <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
+    </node>
+
+    <!-- visualization with rtabmap_viz -->
+    <node if="$(arg rtabmap_viz)" pkg="rtabmap_viz" type="rtabmap_viz" name="rtabmap_viz" args="-d $(find rtabmap_demos)/launch/config/rgbd_gui.ini" output="screen">
+      <param name="subscribe_odom"   type="bool"   value="true"/>
+      <param name="subscribe_scan"   type="bool"   value="false"/>
+      <param name="frame_id"         type="string" value="/tb3_0/base_footprint"/>
+      <param name="approx_sync"      type="bool"   value="true"/>
+      <remap from="odom"            to="/tb3_0/odom"/>
+      <remap from="scan"            to="/tb3_0/scan"/>
+      <param name="queue_size"      type="int"    value="30"/>
+    </node>
+  </group>
+
+  <group ns="rtabmap_1">
+    <node if="$(eval model=='waffle')" pkg="rtabmap_sync" type="rgbd_sync" name="rgbd_sync" output="screen">
+      <remap from="rgb/image"         to="/tb3_1/camera/rgb/image_raw"/>
+      <remap from="depth/image"       to="/tb3_1/camera/depth/image_raw"/>
+      <remap from="rgb/camera_info"   to="/tb3_1/camera/rgb/camera_info"/>
+      <param name="approx_sync"         type="bool"   value="false"/>
+      <param name="queue_size"      type="int"    value="30"/>
+    </node>
+
+    <node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" output="screen" args="$(arg rtabmap_args)">
+      <param name="database_path"       type="string" value="$(arg database_path)_1.db"/>
+      <param name="frame_id"            type="string" value="/tb3_1/base_footprint"/>
+      <param name="subscribe_depth" type="bool" value="false"/>
+      <param name="subscribe_rgb" type="bool" value="false"/>
+      <param name="subscribe_rgbd" type="bool" value="true"/>
+      <param name="subscribe_scan"      type="bool"   value="false"/>
+      <param name="Grid/Sensor"            type="string" value="$(arg from_sensor)"/>
+      <param name="queue_size"      type="int"    value="30"/>
+
+      <remap from="odom"            to="/tb3_1/odom"/>
+      <remap from="rgbd_image"       to="rgbd_image"/>     
+      <remap from="scan"            to="/tb3_1/scan"/>
+
+      <remap from="grid_map" to="/tb3_1/map"/>
+
+      <param name="RGBD/AngularUpdate"        type="string" value="0.001"/>
+      <param name="RGBD/LinearUpdate"         type="string" value="0.001"/>
+      <param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/>
+      <param name="Icp/VoxelSize"                 type="string" value="0.01"/> 
+      <param name="Grid/RangeMax" type="string" value="5" />
+      <param name="Grid/CellSize" type="string" value="0.05"/>
+      <param name="Reg/Strategy"                 type="string" value="1"/>
+      <param name="Reg/Force3DoF"                type="string" value="true"/>
+      <param name="Rtabmap/DetectionRate"        type="string" value="2"/>
+      <param name="Grid/RayTracing"              type="string" value="true"/>
+      <param name="Grid/CellSize"                type="string" value="0.05"/>
+      <param name="Grid/3D"                      type="string" value="true"/>
+      <param name="GridGlobal/MinSize"           type="string" value="20"/>
+      <param name="Grid/MaxGroundHeight"         type="string" value="0.15"/>    
+      <param name="Kp/MaxFeatures"               type="string" value="-1"/>    
+      <param name="Kp/MaxDepth"                   type="string" value="2"/>
+      
+
+      <!-- localization mode -->
+      <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
+      <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
+    </node>
+
+    <!-- visualization with rtabmap_viz -->
+    <node if="$(arg rtabmap_viz)" pkg="rtabmap_viz" type="rtabmap_viz" name="rtabmap_viz" args="-d $(find rtabmap_demos)/launch/config/rgbd_gui.ini" output="screen">
+      <param name="subscribe_odom"   type="bool"   value="true"/>
+      <param name="subscribe_scan"   type="bool"   value="false"/>
+      <param name="frame_id"         type="string" value="/tb3_1/base_footprint"/>
+      <param name="approx_sync"      type="bool"   value="true"/>
+      <remap from="odom"            to="/tb3_1/odom"/>
+      <remap from="scan"            to="/tb3_1/scan"/>
+      <param name="queue_size"      type="int"    value="30"/>
+    </node>
+  </group>
+
+
+  <group ns="rtabmap_2">
+    <node if="$(eval model=='waffle')" pkg="rtabmap_sync" type="rgbd_sync" name="rgbd_sync" output="screen">
+      <remap from="rgb/image"         to="/tb3_2/camera/rgb/image_raw"/>
+      <remap from="depth/image"       to="/tb3_2/camera/depth/image_raw"/>
+      <remap from="rgb/camera_info"   to="/tb3_2/camera/rgb/camera_info"/>
+      <param name="approx_sync"         type="bool"   value="false"/>
+      <param name="queue_size"      type="int"    value="30"/>
+    </node>
+
+    <node name="rtabmap" pkg="rtabmap_slam" type="rtabmap" output="screen" args="$(arg rtabmap_args)">
+      <param name="database_path"       type="string" value="$(arg database_path)_2.db"/>
+      <param name="frame_id"            type="string" value="/tb3_2/base_footprint"/>
+      <param name="subscribe_depth" type="bool" value="false"/>
+      <param name="subscribe_rgb" type="bool" value="false"/>
+      <param name="subscribe_rgbd" type="bool" value="true"/>
+      <param name="subscribe_scan"      type="bool"   value="false"/>
+      <param name="Grid/Sensor"            type="string" value="$(arg from_sensor)"/>
+      <param name="queue_size"      type="int"    value="30"/>
+
+      <remap from="odom"            to="/tb3_2/odom"/>
+      <remap from="rgbd_image"       to="rgbd_image"/>     
+      <remap from="scan"            to="/tb3_2/scan"/>
+
+      <remap from="grid_map" to="/tb3_2/map"/>
+
+      <param name="RGBD/AngularUpdate"        type="string" value="0.001"/>
+      <param name="RGBD/LinearUpdate"         type="string" value="0.001"/>
+      <param name="RGBD/OptimizeFromGraphEnd" type="string" value="false"/>
+      <param name="Icp/VoxelSize"                 type="string" value="0.01"/> 
+      <param name="Grid/RangeMax" type="string" value="5" />
+      <param name="Grid/CellSize" type="string" value="0.05"/>
+      <param name="Reg/Strategy"                 type="string" value="1"/>
+      <param name="Reg/Force3DoF"                type="string" value="true"/>
+      <param name="Rtabmap/DetectionRate"        type="string" value="2"/>
+      <param name="Grid/RayTracing"              type="string" value="true"/>
+      <param name="Grid/CellSize"                type="string" value="0.05"/>
+      <param name="Grid/3D"                      type="string" value="true"/>
+      <param name="GridGlobal/MinSize"           type="string" value="20"/>
+      <param name="Grid/MaxGroundHeight"         type="string" value="0.15"/>    
+      <param name="Kp/MaxFeatures"               type="string" value="-1"/>    
+      <param name="Kp/MaxDepth"                   type="string" value="2"/>
+      
+
+      <!-- localization mode -->
+      <param     if="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="false"/>
+      <param unless="$(arg localization)" name="Mem/IncrementalMemory" type="string" value="true"/>
+    </node>
+
+    <!-- visualization with rtabmap_viz -->
+    <node if="$(arg rtabmap_viz)" pkg="rtabmap_viz" type="rtabmap_viz" name="rtabmap_viz" args="-d $(find rtabmap_demos)/launch/config/rgbd_gui.ini" output="screen">
+      <param name="subscribe_odom"   type="bool"   value="true"/>
+      <param name="subscribe_scan"   type="bool"   value="false"/>
+      <param name="frame_id"         type="string" value="/tb3_2/base_footprint"/>
+      <param name="approx_sync"      type="bool"   value="true"/>
+      <remap from="odom"            to="/tb3_2/odom"/>
+      <remap from="scan"            to="/tb3_2/scan"/>
+      <param name="queue_size"      type="int"    value="30"/>
+    </node>
+  </group>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)">
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find multi_explore)/rviz/3_multi.rviz"/>
+  </group>
+
+    <!-- Pass the first turtlebot's position tb3_0/map_merge  -->
+  <group ns="$(arg first_tb3)/map_merge">
+    <param name="init_pose_x"   value="0"/>
+    <param name="init_pose_y"   value="0"/>
+    <param name="init_pose_z"   value="0"/>
+    <param name="init_pose_yaw" value="0"  /> 
+  </group>
+
+  <!-- Pass the second turtlebot's position tb3_1/map_merge  -->
+  <group ns="$(arg second_tb3)/map_merge">
+    <param name="init_pose_x"   value="0"/>
+    <param name="init_pose_y"   value="0"/>
+    <param name="init_pose_z"   value="0"/>
+    <param name="init_pose_yaw" value="0"  /> 
+  </group>
+
+  <group ns="$(arg third_tb3)/map_merge">
+    <param name="init_pose_x"   value="0"/>
+    <param name="init_pose_y"   value="0"/>
+    <param name="init_pose_z"   value="0"/>
+    <param name="init_pose_yaw" value="0"  /> 
+  </group>
+
+  <node pkg="multirobot_map_merge" type="map_merge" respawn="false" name="map_merge">
+    <param name="robot_map_topic" value="/map"/> 
+    <param name="robot_namespace" value="tb3"/>
+    <param name="merged_map_topic" value="total_map"/>
+    <param name="world_frame" value="map"/>
+    <param name="known_init_poses" value="true"/>
+    <param name="merging_rate" value="2"/>
+    <param name="discovery_rate" value="0.05"/>
+    <param name="estimation_rate" value="10"/>
+    <param name="estimation_confidence" value="5.0"/>
+  </node>
+
+  <group ns="$(arg first_tb3)">  <!-- Open the move_base node with some custom configuration files -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen">
+      <!-- Specify DWA local planner -->
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+      
+      <!-- Load common and robot-specific costmap parameters -->
+      <rosparam file="$(find multi_explore)/params/costmap_common_params_waffle_pi.yaml" command="load" ns="global_costmap"/>
+      <rosparam file="$(find multi_explore)/params/costmap_common_params_waffle_pi.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find multi_explore)/params/local_costmap_params_$(arg first_tb3).yaml"  command="load"/>
+      <rosparam file="$(find multi_explore)/params/global_costmap_params_$(arg first_tb3).yaml" command="load"/>
+          <rosparam file="$(find multi_explore)/params/dwa_local_planner_params_waffle_pi.yaml" command="load" />
+          <rosparam file="$(find multi_explore)/params/base_global_planner.yaml" command="load" />
+      <rosparam file="$(find multi_explore)/params/move_base_params.yaml" command="load" />
+
+      <!-- Remap necessary topics -->
+      <remap from="robot_base_frame" to="$(arg first_tb3)/base_footprint"/>
+      <remap from="/map" to="$(arg first_tb3)/map"/>
+      <remap from="/odom" to="/$(arg first_tb3)/odom"/>
+      <remap from="/cmd_vel" to="$(arg first_tb3)/cmd_vel"/>
+    </node>
+    </group>
+
+
+  <group ns="$(arg second_tb3)">  <!-- Open the move_base node with some custom configuration files -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen">
+      <!-- Specify DWA local planner -->
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+      
+      <!-- Load common and robot-specific costmap parameters -->
+      <rosparam file="$(find multi_explore)/params/costmap_common_params_waffle_pi.yaml" command="load" ns="global_costmap"/>
+      <rosparam file="$(find multi_explore)/params/costmap_common_params_waffle_pi.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find multi_explore)/params/local_costmap_params_$(arg second_tb3).yaml"  command="load"/>
+      <rosparam file="$(find multi_explore)/params/global_costmap_params_$(arg second_tb3).yaml" command="load"/>
+          <rosparam file="$(find multi_explore)/params/dwa_local_planner_params_waffle_pi.yaml" command="load" />
+          <rosparam file="$(find multi_explore)/params/base_global_planner.yaml" command="load" />
+      <rosparam file="$(find multi_explore)/params/move_base_params.yaml" command="load" />
+      <remap from="robot_base_frame" to="$(arg second_tb3)/base_footprint"/>
+      <remap from="/map" to="$(arg second_tb3)/map"/>
+      <remap from="/odom" to="/$(arg second_tb3)/odom"/>
+      <remap from="/cmd_vel" to="$(arg second_tb3)/cmd_vel"/>
+    </node>
+    </group>
+
+  <group ns="$(arg third_tb3)">  <!-- Open the move_base node with some custom configuration files -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base_node" output="screen">
+      <!-- Specify DWA local planner -->
+      <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+      
+      <!-- Load common and robot-specific costmap parameters -->
+      <rosparam file="$(find multi_explore)/params/costmap_common_params_waffle_pi.yaml" command="load" ns="global_costmap"/>
+      <rosparam file="$(find multi_explore)/params/costmap_common_params_waffle_pi.yaml" command="load" ns="local_costmap" />
+      <rosparam file="$(find multi_explore)/params/local_costmap_params_$(arg third_tb3).yaml"  command="load"/>
+      <rosparam file="$(find multi_explore)/params/global_costmap_params_$(arg third_tb3).yaml" command="load"/>
+          <rosparam file="$(find multi_explore)/params/dwa_local_planner_params_waffle_pi.yaml" command="load" />
+          <rosparam file="$(find multi_explore)/params/base_global_planner.yaml" command="load" />
+      <rosparam file="$(find multi_explore)/params/move_base_params.yaml" command="load" />
+      <remap from="robot_base_frame" to="$(arg third_tb3)/base_footprint"/>
+      <remap from="/map" to="/$(arg third_tb3)/map"/>
+      <remap from="/odom" to="/$(arg third_tb3)/odom"/>
+      <remap from="/cmd_vel" to="/$(arg third_tb3)/cmd_vel"/>
+    </node>
+    </group>
+
+    <!-- Load common and robot-specific costmap parameters -->
+    <node name="point_cloud_merger" pkg="multi_explore" type="PC_Merger.py" output="screen"/> 
+    <node name="rssi_robot_1" pkg="multi_explore" type="RSSI_Robot1.py" output="screen"/> 
+    <node name="rssi_robot_2" pkg="multi_explore" type="RSSI_Robot2.py" output="screen"/> 
+    <node name="rssi_robot_3 pkg="multi_explore" type="RSSI_Robot3.py" output="screen"/> 
+    <node name="RSSI_Simulation_House" pkg="multi_explore" type="RSSI_Simulation_House.py" output="screen"/> 
+
+    <node pkg="multi_explore" type="assigner.py" name="frontier_assigner" output="screen">
+    <param name="robot_namespaces" value="$(arg robot_name_list)"/>
+    <param name="tb3_0_x" value="$(arg first_tb3_x_pos)"/>
+    <param name="tb3_0_y" value="$(arg first_tb3_y_pos)"/>
+    <param name="tb3_1_x" value="$(arg second_tb3_x_pos)"/>
+    <param name="tb3_1_y" value="$(arg second_tb3_y_pos)"/>
+    <param name="assign_rate" value="$(arg assign_rate)"/>
+  </node>
+
+</launch>
