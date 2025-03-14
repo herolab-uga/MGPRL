@@ -7,7 +7,7 @@ This repository contains the ROS package that implements the works from the algo
 
 ### Experimental Demonstration and Video
 <video width="600" controls>
-  <source src="Images/MGPRL.mp4" type="Images/MGPRL.mp4">
+  <source src="Images/MGPRL.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
